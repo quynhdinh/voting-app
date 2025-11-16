@@ -1,0 +1,11 @@
+# 1. Init Terraform
+terraform init
+
+# 2. Execution Plan
+terraform plan
+
+# 3. Apply changes
+terraform apply
+
+# 4. destroy infraestructure
+terraform destroy
