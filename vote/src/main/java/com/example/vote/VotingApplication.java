@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-// Using Spring Data MongoDB for votes
+import java.util.stream.Collectors;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -50,13 +50,14 @@ interface VoteRepository extends MongoRepository<Vote, String> {
 
 @Repository
 interface UserVoteStateRepository extends MongoRepository<User_Vote_State, String> {
-
+	Optional<User_Vote_State> findByVoterIdAndContestId(String voterId, String contestId);
 }
 
 @Component
 @Data
 @AllArgsConstructor
 class DataLoader implements CommandLineRunner {
+	private final VoteService voteService;
 	private final VoteRepository voteRepository;
 	private final UserVoteStateRepository userVoteStateRepository;
 	private final VoteProducer voteProducer;
@@ -67,13 +68,11 @@ class DataLoader implements CommandLineRunner {
 		userVoteStateRepository.deleteAll();
 		// Let the database generate IDs (GenerationType.IDENTITY). Do not set id manually.
 		Vote vote1 = new Vote(null, "contest1", "voter1", "candidate1", System.currentTimeMillis());
-		voteRepository.save(vote1);
+		voteService.vote(vote1);
 		voteProducer.sendVote(vote1);
-		userVoteStateRepository.save(new User_Vote_State("voter1", "contest1", "candidate1"));
 		Vote vote2 = new Vote(null, "contest1", "voter2", "candidate2", System.currentTimeMillis());
-		voteRepository.save(vote2);
+		voteService.vote(vote2);
 		voteProducer.sendVote(vote2);
-		userVoteStateRepository.save(new User_Vote_State("voter2", "contest1", "candidate2"));
 	}
 }
 
@@ -87,37 +86,50 @@ class VoteService {
 		return voteRepository.findAll();
 	}
 	public Vote vote(Vote vote) throws Exception {
-		String already = userVoteStateRepository.findById(vote.getVoterId()).map(User_Vote_State::getCandidateIds).orElse("");
+		Optional<User_Vote_State> userVoteStateOpt = userVoteStateRepository.findByVoterIdAndContestId(vote.getVoterId(), vote.getContestId());
+		String already = userVoteStateOpt.map(User_Vote_State::getCandidateIds).orElse("");
 		Set<String> alreadySet = Set.of(already.split(","));
 		Set<String> newCandidates = Set.of(vote.getCandidateIds().split(","));
-		// if already voted for any of the new candidates, ignore
+		// if already voted for all of the new candidates, ignore
 		Set<String> updatedCandidates = new HashSet<>(alreadySet);
 		updatedCandidates.addAll(newCandidates);
-		if(updatedCandidates.size() == alreadySet.size()) {
-			return null; // already voted for all these candidates
+		if(updatedCandidates.size() > alreadySet.size()) {
+			String updatedCandidateIds = String.join(",", updatedCandidates);
+			vote.setCandidateIds(updatedCandidateIds);
+			voteRepository.save(vote);
+			// send to kafka only the newly_added votes
+			Vote new_added_votes = new Vote(vote.getId(), vote.getContestId(), vote.getVoterId(),
+					newCandidates.stream().filter(c -> !alreadySet.contains(c)).collect(Collectors.joining(",")),
+					vote.getCreatedAt());
+			voteProducer.sendVote(new_added_votes);
+			// if already saved, update, else save new
+			userVoteStateRepository.save(new User_Vote_State(userVoteStateOpt.isEmpty() ? null : userVoteStateOpt.get().getId(), vote.getVoterId(), vote.getContestId(), updatedCandidateIds));
+			return vote;
 		}
-		String updatedCandidateIds = String.join(",", updatedCandidates);
-		vote.setCandidateIds(updatedCandidateIds);
-		voteProducer.sendVote(vote);
-		userVoteStateRepository.save(new User_Vote_State(vote.getVoterId(), vote.getContestId(), updatedCandidateIds));
-		return voteRepository.save(vote);
+		return null; // already voted for all candidates
 	}
 	public Vote unvote(Vote vote) throws Exception {
-		String already = userVoteStateRepository.findById(vote.getVoterId()).map(User_Vote_State::getCandidateIds).orElse("");
+		Optional<User_Vote_State> userOpt = userVoteStateRepository.findById(vote.getVoterId());
+		String already = userOpt.map(User_Vote_State::getCandidateIds).orElse("");
 		Set<String> alreadySet = Set.of(already.split(","));
 		Set<String> removeCandidates = Set.of(vote.getCandidateIds().split(","));
-		// if already voted for any of the remove candidates, unvote
+		// if haven't voted for any of the remove candidates, ignore
 		Set<String> updatedCandidates = new HashSet<>(alreadySet);
 		updatedCandidates.removeAll(removeCandidates);
 		if(updatedCandidates.size() < alreadySet.size()) {
 			String updatedCandidateIds = String.join(",", updatedCandidates);
 			vote.setCandidateIds(updatedCandidateIds);
 			voteRepository.deleteById(vote.getId());
-			voteProducer.sendVote(vote);
-			userVoteStateRepository.save(new User_Vote_State(vote.getVoterId(), vote.getContestId(), updatedCandidateIds));
+			//send to kafka only unvote candidates
+			Vote unvote_candidates = new Vote(vote.getId(), vote.getContestId(), vote.getVoterId(),
+					removeCandidates.stream().filter(c -> alreadySet.contains(c)).collect(Collectors.joining(",")),
+					vote.getCreatedAt());
+			voteProducer.sendUnvote(unvote_candidates);
+			// if already saved, update, else save new
+			userVoteStateRepository.save(new User_Vote_State(userOpt.isEmpty() ? null : userOpt.get().getId(), vote.getVoterId(), vote.getContestId(), updatedCandidateIds));
 			return vote;
 		}
-		return null; // not voted for this candidate
+		return null; // haven't voted for any of the remove candidates
 	}
 }
 @RestController
@@ -156,6 +168,13 @@ class VoteProducer {
 		// now not one consumer will get all messages
 		kafkaTemplate.send("votes", String.valueOf(vote.getId()), writeValueAsString);
 	}
+	public void sendUnvote(Vote vote) throws Exception {
+		ObjectMapper objectMapper = new ObjectMapper();
+		String writeValueAsString = objectMapper.writeValueAsString(vote);
+		// send with different key to distribute across partitions
+		// now not one consumer will get all messages
+		kafkaTemplate.send("unvotes", String.valueOf(vote.getId()), writeValueAsString);
+	}
 }
 
 @Document
@@ -175,7 +194,9 @@ class Vote {
 @AllArgsConstructor
 @NoArgsConstructor
 class User_Vote_State {
-	private String userId;
+	@Id
+	private String id;
+	private String voterId;
 	private String contestId;
 	private String candidateIds;
 }
