@@ -36,15 +36,27 @@ services:
       - "9092:9092"
     restart: always
 
-  consul:
-    image: hashicorp/consul:latest
-    container_name: consul
+  result-db:
+    image: pgvector/pgvector:0.8.1-pg17-trixie
+    environment:
+      POSTGRES_DB: result
+      POSTGRES_USER: result
+      POSTGRES_PASSWORD: result
     ports:
-      - "8500:8500"
-    restart: unless-stopped
+      - "5435:5432"
+    volumes:
+      - pgdata_result:/var/lib/postgresql/data
+    restart: always
 
+    consul:
+      image: hashicorp/consul:latest
+      container_name: consul
+      ports:
+        - "8500:8500"
+      restart: unless-stopped
 volumes:
   pgdata: {}
   pgdata_contest: {}
   mongodb-data: {}
   pgdata_vote: {}
+  pgdata_result: {}
