@@ -48,12 +48,12 @@ services:
       - pgdata_result:/var/lib/postgresql/data
     restart: always
 
-    consul:
-      image: hashicorp/consul:latest
-      container_name: consul
-      ports:
-        - "8500:8500"
-      restart: unless-stopped
+  consul:
+    image: hashicorp/consul:latest
+    container_name: consul
+    ports:
+      - "8500:8500"
+    restart: unless-stopped
 volumes:
   pgdata: {}
   pgdata_contest: {}

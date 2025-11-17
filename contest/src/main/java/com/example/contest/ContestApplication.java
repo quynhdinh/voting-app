@@ -17,8 +17,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import java.util.List;
 import lombok.AllArgsConstructor;
-
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @SpringBootApplication
+@EnableDiscoveryClient
 public class ContestApplication {
 
 	public static void main(String[] args) {
