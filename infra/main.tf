@@ -112,3 +112,17 @@ module "mongo_atlas" {
   aws_vpc_cidr    = "10.0.0.0/16"
 }
 
+# Assuming your vpc module exports vpc_id and private_route_table_ids:
+module "mongo_atlas_peering" {
+  source             = "./modules/mongo-atlas-peering"
+  project_name       = var.project_name
+  mongodb_project_id = var.mongodb_project_id
+
+  aws_vpc_id         = module.vpc.vpc_id
+  aws_region         = var.aws_region
+  aws_vpc_cidr       = "10.0.0.0/16"
+  aws_route_table_ids = module.vpc.private_route_table_ids
+
+  atlas_cidr_block   = "192.168.0.0/21"
+}
+
