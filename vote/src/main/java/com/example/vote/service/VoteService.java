@@ -3,6 +3,7 @@ import com.example.vote.model.Vote;
 import com.example.vote.model.User_Vote_State;
 import com.example.vote.repository.VoteRepository;
 import com.example.vote.repository.UserVoteStateRepository;
+import com.example.vote.dto.VoteDTO;
 import com.example.vote.integration.VoteProducer;
 import java.util.*;
 import lombok.AllArgsConstructor;
@@ -34,7 +35,7 @@ public class VoteService {
 			Vote new_added_votes = new Vote(vote.getId(), vote.getContestId(), vote.getVoterId(),
 					newCandidates.stream().filter(c -> !alreadySet.contains(c)).collect(Collectors.joining(",")),
 					vote.getCreatedAt());
-			voteProducer.sendVote(new_added_votes);
+			voteProducer.sendVote(new VoteDTO(new_added_votes.getContestId(), new_added_votes.getVoterId(), new_added_votes.getCandidateIds()));
 			// if already saved, update, else save new
 			userVoteStateRepository.save(new User_Vote_State(userVoteStateOpt.isEmpty() ? null : userVoteStateOpt.get().getId(), vote.getVoterId(), vote.getContestId(), updatedCandidateIds));
 			return vote;
@@ -57,7 +58,7 @@ public class VoteService {
 			Vote unvote_candidates = new Vote(vote.getId(), vote.getContestId(), vote.getVoterId(),
 					removeCandidates.stream().filter(c -> alreadySet.contains(c)).collect(Collectors.joining(",")),
 					vote.getCreatedAt());
-			voteProducer.sendUnvote(unvote_candidates);
+			voteProducer.sendUnvote(new VoteDTO(unvote_candidates.getContestId(), unvote_candidates.getVoterId(), unvote_candidates.getCandidateIds()));
 			// if already saved, update, else save new
 			userVoteStateRepository.save(new User_Vote_State(userOpt.isEmpty() ? null : userOpt.get().getId(), vote.getVoterId(), vote.getContestId(), updatedCandidateIds));
 			return vote;

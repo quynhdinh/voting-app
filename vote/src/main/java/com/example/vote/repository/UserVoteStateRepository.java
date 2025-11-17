@@ -5,6 +5,6 @@ import com.example.vote.model.User_Vote_State;
 import java.util.Optional;
 
 @Repository
-public interface UserVoteStateRepository extends MongoRepository<User_Vote_State, String> {
-	Optional<User_Vote_State> findByVoterIdAndContestId(String voterId, String contestId);
+public interface UserVoteStateRepository extends MongoRepository<User_Vote_State, Long> {
+	Optional<User_Vote_State> findByVoterIdAndContestId(Long voterId, Long contestId);
 }

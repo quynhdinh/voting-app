@@ -20,15 +20,15 @@ public class DataLoader implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
+		System.out.println("Loading initial data...");
 		voteRepository.deleteAll();
 		userVoteStateRepository.deleteAll();
 		// Let the database generate IDs (GenerationType.IDENTITY). Do not set id manually.
-		Vote vote1 = new Vote(null, "contest1", "voter1", "candidate1", System.currentTimeMillis());
+		// let the service send to kafka!
+		Vote vote1 = new Vote(null, 1L, 1L, "candidate1", System.currentTimeMillis());
 		voteService.vote(vote1);
-		voteProducer.sendVote(vote1);
-		Vote vote2 = new Vote(null, "contest1", "voter2", "candidate2", System.currentTimeMillis());
+		Vote vote2 = new Vote(null, 1L, 2L, "candidate2", System.currentTimeMillis());
 		voteService.vote(vote2);
-		voteProducer.sendVote(vote2);
 	}
 }
 
