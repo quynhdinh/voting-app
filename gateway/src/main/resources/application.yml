@@ -1,0 +1,26 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        register: true
+        prefer-ip-address: true        # evita hostnames no resolubles
+        instance-id: ${spring.application.name}-${server.port}
+        health-check-url: http://host.docker.internal:8080/actuator/health
+        health-check-interval: 10s
+        deregister-critical-service-after: 1m
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
