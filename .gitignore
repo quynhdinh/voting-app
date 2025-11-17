@@ -17,3 +17,11 @@ terraform.tfvars.development
 terraform.tfvars.test
 terraform.tfvars.production
 terraform.tfvars.development
+
+# ignore all the target at any level
+**/target/
+ignore all the .gitignore file
+.gitignore
+.gitattributes
+#ignore all the .mvn folder
+.mvn/
