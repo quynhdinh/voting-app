@@ -9,8 +9,8 @@ import lombok.Data;
 public class Vote {
 	@Id
 	private String id;
-	private String contestId;
-	private String voterId;
+	private Long contestId;
+	private Long voterId;
 	private String candidateIds;
 	private Long createdAt;
 }

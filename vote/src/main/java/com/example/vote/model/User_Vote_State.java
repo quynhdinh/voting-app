@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class User_Vote_State {
 	@Id
 	private String id;
-	private String voterId;
-	private String contestId;
+	private Long voterId;
+	private Long contestId;
 	private String candidateIds;
 }
