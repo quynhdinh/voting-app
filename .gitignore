@@ -25,3 +25,5 @@ ignore all the .gitignore file
 .gitattributes
 #ignore all the .mvn folder
 .mvn/
+# ignore DS_Store files at all levels
+.DS_Store
