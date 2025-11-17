@@ -6,6 +6,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import lombok.Data;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import jakarta.persistence.Entity;
@@ -39,6 +41,20 @@ class Contest {
 	private Long createdAt;
 }
 
+@Entity
+@Table(name = "candidates")
+@Data
+@AllArgsConstructor
+class Candidate {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	private Long contestId;
+	private String name;
+	private String description;
+	private Long createdAt;
+}
+
 interface ContestRepository extends JpaRepository<Contest, Long> {
 
 }
@@ -52,5 +68,10 @@ class ContestController {
 	public List<Contest> getAllContests() {
 		System.out.println("Fetching all contests");
 		return contestRepository.findAll();
+	}
+	// get contest full information by id
+	@GetMapping("/{id}")
+	public Contest getContestById(@PathVariable Long id) {
+		return contestRepository.findById(id).orElse(null);
 	}
 }

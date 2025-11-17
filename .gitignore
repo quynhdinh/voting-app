@@ -18,8 +18,8 @@ terraform.tfvars.test
 terraform.tfvars.production
 terraform.tfvars.development
 
-# ignore all the target at any level
-**/target/
+# ignore all the target and everything inside
+target/
 ignore all the .gitignore file
 .gitignore
 .gitattributes

@@ -35,8 +35,21 @@ services:
     ports:
       - "9092:9092"
     restart: always
+
+  result-db:
+    image: pgvector/pgvector:0.8.1-pg17-trixie
+    environment:
+      POSTGRES_DB: result
+      POSTGRES_USER: result
+      POSTGRES_PASSWORD: result
+    ports:
+      - "5435:5432"
+    volumes:
+      - pgdata_result:/var/lib/postgresql/data
+    restart: always
 volumes:
   pgdata: {}
   pgdata_contest: {}
   mongodb-data: {}
   pgdata_vote: {}
+  pgdata_result: {}
