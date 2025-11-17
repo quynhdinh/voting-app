@@ -25,9 +25,9 @@ public class DataLoader implements CommandLineRunner {
 		userVoteStateRepository.deleteAll();
 		// Let the database generate IDs (GenerationType.IDENTITY). Do not set id manually.
 		// let the service send to kafka!
-		Vote vote1 = new Vote(null, 1L, 1L, "candidate1", System.currentTimeMillis());
+		Vote vote1 = new Vote(null, 1L, 1L, "1", System.currentTimeMillis());
 		voteService.vote(vote1);
-		Vote vote2 = new Vote(null, 1L, 2L, "candidate2", System.currentTimeMillis());
+		Vote vote2 = new Vote(null, 1L, 2L, "2", System.currentTimeMillis());
 		voteService.vote(vote2);
 	}
 }

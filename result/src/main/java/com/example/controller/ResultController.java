@@ -19,9 +19,14 @@ public class ResultController {
     public String test() {
         return "Result Service is up and running!";
     }
-
+    //get all results
+    @GetMapping
+    @RequestMapping("/all")
+    public List<Result> getAllResults() {
+        return resultService.getAllResults();
+    }
     @GetMapping("/{contestId}")
     public List<Result> getResultsByContestId(@PathVariable Long contestId) {
-        return List.of();
+        return resultService.getResultsByContestId(contestId);
     }
 }
