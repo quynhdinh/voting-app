@@ -23,21 +23,22 @@ public class ContestService {
 	}
 
 	public Contest createContest(CreateContestDTO contest) {
-		Contest newContest = new Contest();
-		newContest.setCreatedBy(contest.getCreatedBy());
-		newContest.setTitle(contest.getTitle());
-		newContest.setDescription(contest.getDescription());
-		newContest.setStartTime(contest.getStartTime());
-		newContest.setEndTime(contest.getEndTime());
-		newContest.setCreatedAt(System.currentTimeMillis());
-		System.out.println("saving " + newContest);
+		Contest newContest = new Contest(null, 
+		contest.getTitle(), 
+		contest.getDescription(), 
+		contest.getStartTime(), 
+		contest.getEndTime(), 
+		contest.getCreatedBy(), 
+		System.currentTimeMillis()
+		);
 		Contest savedContest = contestRepository.save(newContest);
-
 		if (contest.getCandidates() != null) {
 			contest.getCandidates().forEach(candidate -> {
-				Candidate newCandidate = new Candidate();
-				newCandidate.setName(candidate.getName());
-				newCandidate.setContestId(savedContest.getId());
+				Candidate newCandidate = new Candidate(null, 
+				savedContest.getId(), 
+				candidate.getName(), 
+				candidate.getDescription(), 
+				System.currentTimeMillis());
 				candidateRepository.save(newCandidate);
 			});
 		}

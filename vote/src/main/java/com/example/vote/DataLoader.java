@@ -1,5 +1,6 @@
 package com.example.vote;
 import com.example.vote.model.Vote;
+import com.example.vote.dto.VoteDTO;
 import com.example.vote.integration.VoteProducer;
 import com.example.vote.repository.VoteRepository;
 import org.springframework.boot.CommandLineRunner;
@@ -25,9 +26,9 @@ public class DataLoader implements CommandLineRunner {
 		userVoteStateRepository.deleteAll();
 		// Let the database generate IDs (GenerationType.IDENTITY). Do not set id manually.
 		// let the service send to kafka!
-		Vote vote1 = new Vote(null, 1L, 1L, "1", System.currentTimeMillis());
+		VoteDTO vote1 = new VoteDTO(1L, 1L, 1L);
 		voteService.vote(vote1);
-		Vote vote2 = new Vote(null, 1L, 2L, "2", System.currentTimeMillis());
+		VoteDTO vote2 = new VoteDTO(1L, 1L, 2L);
 		voteService.vote(vote2);
 	}
 }

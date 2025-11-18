@@ -8,4 +8,5 @@
 -- );
 -- NOTE: keep each INSERT as a single statement (semicolon-terminated)
 -- and use the correct column names (schema uses `role`, not `roles`).
-INSERT INTO users (username, email, password_hash, roles) VALUES ('admin', 'admin@example.com', 'hashed_password', 'admin');
+INSERT INTO users (username, email, password_hash, roles) VALUES ('admin', 'admin@example.com', 'admin', 'admin');
+INSERT INTO users (username, email, password_hash, roles) VALUES ('user', 'user@example.com', 'user', 'voter');

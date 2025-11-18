@@ -8,7 +8,6 @@ import com.example.vote.integration.VoteProducer;
 import java.util.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -19,50 +18,29 @@ public class VoteService {
 	public List<Vote> getAllVotes() {
 		return voteRepository.findAll();
 	}
-	public Vote vote(Vote vote) throws Exception {
-		Optional<User_Vote_State> userVoteStateOpt = userVoteStateRepository.findByVoterIdAndContestId(vote.getVoterId(), vote.getContestId());
-		String already = userVoteStateOpt.map(User_Vote_State::getCandidateIds).orElse("");
-		Set<String> alreadySet = Set.of(already.split(","));
-		Set<String> newCandidates = Set.of(vote.getCandidateIds().split(","));
-		// if already voted for all of the new candidates, ignore
-		Set<String> updatedCandidates = new HashSet<>(alreadySet);
-		updatedCandidates.addAll(newCandidates);
-		if(updatedCandidates.size() > alreadySet.size()) {
-			String updatedCandidateIds = String.join(",", updatedCandidates);
-			vote.setCandidateIds(updatedCandidateIds);
-			voteRepository.save(vote);
-			// send to kafka only the newly_added votes
-			Vote new_added_votes = new Vote(vote.getId(), vote.getContestId(), vote.getVoterId(),
-					newCandidates.stream().filter(c -> !alreadySet.contains(c)).collect(Collectors.joining(",")),
-					vote.getCreatedAt());
-			voteProducer.sendVote(new VoteDTO(new_added_votes.getContestId(), new_added_votes.getVoterId(), new_added_votes.getCandidateIds()));
-			// if already saved, update, else save new
-			userVoteStateRepository.save(new User_Vote_State(userVoteStateOpt.isEmpty() ? null : userVoteStateOpt.get().getId(), vote.getVoterId(), vote.getContestId(), updatedCandidateIds));
-			return vote;
-		}
-		return null; // already voted for all candidates
-	}
-	public Vote unvote(Vote vote) throws Exception {
-		Optional<User_Vote_State> userOpt = userVoteStateRepository.findById(vote.getVoterId());
+	public Vote vote(VoteDTO vote) throws Exception {
+		// there is only one vote in vote.candidateId
+		// check if user has already voted for this candidate in this contest
+		// if yes ignore else save
+		Optional<User_Vote_State> userOpt = userVoteStateRepository.findByVoterIdAndContestId(vote.getVoterId(), vote.getContestId());
 		String already = userOpt.map(User_Vote_State::getCandidateIds).orElse("");
-		Set<String> alreadySet = Set.of(already.split(","));
-		Set<String> removeCandidates = Set.of(vote.getCandidateIds().split(","));
-		// if haven't voted for any of the remove candidates, ignore
-		Set<String> updatedCandidates = new HashSet<>(alreadySet);
-		updatedCandidates.removeAll(removeCandidates);
-		if(updatedCandidates.size() < alreadySet.size()) {
-			String updatedCandidateIds = String.join(",", updatedCandidates);
-			vote.setCandidateIds(updatedCandidateIds);
-			voteRepository.deleteById(vote.getId());
-			//send to kafka only unvote candidates
-			Vote unvote_candidates = new Vote(vote.getId(), vote.getContestId(), vote.getVoterId(),
-					removeCandidates.stream().filter(c -> alreadySet.contains(c)).collect(Collectors.joining(",")),
-					vote.getCreatedAt());
-			voteProducer.sendUnvote(new VoteDTO(unvote_candidates.getContestId(), unvote_candidates.getVoterId(), unvote_candidates.getCandidateIds()));
-			// if already saved, update, else save new
-			userVoteStateRepository.save(new User_Vote_State(userOpt.isEmpty() ? null : userOpt.get().getId(), vote.getVoterId(), vote.getContestId(), updatedCandidateIds));
-			return vote;
+		Set<String> alreadySet = new HashSet<>(Arrays.asList(already.split(",")));
+		if (!alreadySet.contains(String.valueOf(vote.getCandidateId()))) {
+
+			alreadySet.add(String.valueOf(vote.getCandidateId()));
+			String updated = String.join(",", alreadySet);
+			User_Vote_State userVoteState = new User_Vote_State(userOpt.isPresent() ? userOpt.get().getId() : null, vote.getVoterId(), vote.getContestId(), updated);
+			userVoteStateRepository.save(userVoteState);
+			// save vote
+			Vote newVote = new Vote(null, vote.getContestId(), vote.getVoterId(), vote.getCandidateId().toString(), System.currentTimeMillis());
+			Vote savedVote = voteRepository.save(newVote);
+			voteProducer.sendVote(vote);
+			return savedVote;
 		}
-		return null; // haven't voted for any of the remove candidates
+		return null; // already voted for this candidate
 	}
+	public Vote unvote(VoteDTO vote) throws Exception {
+		return null;
+	}
+
 }

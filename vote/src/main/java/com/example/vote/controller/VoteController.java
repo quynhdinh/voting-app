@@ -7,10 +7,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.List;
+import com.example.vote.dto.VoteDTO;
+
 @RestController
 @RequestMapping("/votes")
 @AllArgsConstructor
+@Slf4j
 class VoteController {
 
 	private final VoteService voteService;
@@ -20,13 +25,16 @@ class VoteController {
 		return voteService.getAllVotes();
 	}
 
-	// you cannot unvote for a candidate, you can only vote for more candidate of a contest
+	// sample curl
+	// curl -X POST http://localhost:8080/votes -H "Content-Type: application/json" -d '{"contestId": 1, "voterId": 1, "candidateId": 2}'
 	@PostMapping
-	public Vote vote(@RequestBody Vote vote) throws Exception {
+	public Vote vote(@RequestBody VoteDTO vote) throws Exception {
+		log.info("Received vote request: {}", vote);
 		return voteService.vote(vote);
 	}
 	@PostMapping("/unvote")
-	public Vote unvote(@RequestBody Vote vote) throws Exception {
+	public Vote unvote(@RequestBody VoteDTO vote) throws Exception {
+		log.info("Received unvote request: {}", vote);
 		return voteService.unvote(vote);
 	}
 }

@@ -33,10 +33,10 @@ public class UserController {
         System.out.println("User found: " + user);
         if (user != null && user.getPasswordHash().equals(password)) {
             System.out.println("Sign in successful for user: " + username);
-            return ResponseEntity.ok(new SignInResponse("success", user.getUsername()));
+            return ResponseEntity.ok(new SignInResponse("success", user.getUsername(), user.getId()));
         } else {
-            return ResponseEntity.status(401).body(new SignInResponse("unauthorized", null));
+            return ResponseEntity.status(401).body(new SignInResponse("unauthorized", null, null));
         }
     }
 }
-record SignInResponse(String message, String username) {}
+record SignInResponse(String message, String username, Long id) {}

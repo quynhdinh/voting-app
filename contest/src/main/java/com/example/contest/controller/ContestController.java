@@ -23,22 +23,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class ContestController {
 	private final ContestService contestService;
 
-	@RequestMapping("")
+	@RequestMapping
 	public List<Contest> getAllContests() {
+		log.info("Fetching all contests");
 		return contestService.getAllContests();
 	}
 
 	@GetMapping("/{id}")
 	public ContestDTO getContestById(@PathVariable Long id) {
+		log.info("Fetching contest with id: {}", id);
         ContestDTO contestById = contestService.getContestById(id);
 		return contestById;
 	}
 
 	@PostMapping
-	public ResponseEntity<Contest> createContest(@RequestBody CreateContestDTO contest) {
-		log.info("Creating contest: {}", contest);
-		Contest resContest = contestService.createContest(contest);
-		log.info("Created contest: {}", resContest);
+	public ResponseEntity<Contest> createContest(@RequestBody CreateContestDTO input) {
+		log.info(input.getCandidates().toString());
+		Contest resContest = contestService.createContest(input);
 		return ResponseEntity.ok(resContest);
 	}
 	// exapmle curl
