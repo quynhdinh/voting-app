@@ -13,7 +13,6 @@ public class Contest {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String title;
-	private Long candidateId;
 	private String description;
 	private Long startTime;
 	private Long endTime;
