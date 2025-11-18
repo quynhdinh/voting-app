@@ -14,6 +14,7 @@ public class VoteProducer {
 	public void sendVote(VoteDTO vote) throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
 		String writeValueAsString = objectMapper.writeValueAsString(vote);
+		log.info("Sending vote message: {} to topic votes", writeValueAsString);
 		kafkaTemplate.send("votes", String.valueOf(vote.getContestId()), writeValueAsString);
 	}
 	public void sendUnvote(VoteDTO vote) throws Exception {

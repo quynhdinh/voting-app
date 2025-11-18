@@ -1,5 +1,5 @@
 package com.example.dto;
 
-public record VoteDTO(Long contestId, Long voterId, String candidateIds) {
+public record VoteDTO(Long contestId, Long voterId, Long candidateId) {
 
 }

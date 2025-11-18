@@ -51,25 +51,17 @@ public class ResultService {
     // increment the vote in redis
     // increment the vote in postgres
     public void processVote(VoteDTO vote) {
-        String candidates = vote.candidateIds();
-        String[] candidateIds = candidates.split(",");// they should be all numbers
-        for (String candidateIdStr : candidateIds) {
-            Long candidateId = Long.parseLong(candidateIdStr);
-            Result result = resultRepository.findByContestIdAndCandidateId(vote.contestId(), candidateId)
-                    .orElseGet(() -> new Result(null, vote.contestId(), candidateId, 0L));
-            result.setTotalVotes(result.getTotalVotes() + 1);
-            resultRepository.save(result);
-        }
+        Long candidateId = vote.candidateId();
+        Result result = resultRepository.findByContestIdAndCandidateId(vote.contestId(), candidateId)
+                .orElseGet(() -> new Result(null, vote.contestId(), candidateId, 0L));
+        result.setTotalVotes(result.getTotalVotes() + 1);
+        resultRepository.save(result);
     }
     public void processUnvote(VoteDTO unvote) {
-        String candidates = unvote.candidateIds();
-        String[] candidateIds = candidates.split(",");// they should be all numbers
-        for (String candidateIdStr : candidateIds) {
-            Long candidateId = Long.parseLong(candidateIdStr);
-            Result result = resultRepository.findByContestIdAndCandidateId(unvote.contestId(), candidateId)
-                    .orElseGet(() -> new Result(null, unvote.contestId(), candidateId, 0L));
-            result.setTotalVotes(result.getTotalVotes() - 1);
-            resultRepository.save(result);
-        }
+        Long candidateId = unvote.candidateId();
+        Result result = resultRepository.findByContestIdAndCandidateId(unvote.contestId(), candidateId)
+                .orElseGet(() -> new Result(null, unvote.contestId(), candidateId, 0L));
+        result.setTotalVotes(result.getTotalVotes() - 1);
+        resultRepository.save(result);
     }
 }
