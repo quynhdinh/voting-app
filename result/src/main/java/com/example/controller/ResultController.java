@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import com.example.service.ResultService;
+import com.example.dto.res.ContestResultDTO;
 import com.example.model.Result;
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class ResultController {
     public String test() {
         return "Result Service is up and running!";
     }
+
     //get all results
     @GetMapping
     @RequestMapping("/all")
@@ -26,7 +28,7 @@ public class ResultController {
         return resultService.getAllResults();
     }
     @GetMapping("/{contestId}")
-    public List<Result> getResultsByContestId(@PathVariable Long contestId) {
+    public ContestResultDTO getResultsByContestId(@PathVariable Long contestId) {
         return resultService.getResultsByContestId(contestId);
     }
 }

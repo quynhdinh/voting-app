@@ -11,9 +11,9 @@ class BeanConfig {
 	public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
 		return builder.routes()
 			.route(r -> r.path("/users/**")
-				.uri("lb://users"))
-			.route(r -> r.path("/votes/**")
-				.uri("lb://vote"))
+				.uri("lb://user"))
+			.route(r -> r.path("/contests/**")
+				.uri("lb://contest"))
 			.route(r -> r.path("/votes/**")
 				.uri("lb://vote"))
 			.route(r -> r.path("/results/**")
