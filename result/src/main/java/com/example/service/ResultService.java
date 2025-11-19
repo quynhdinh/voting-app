@@ -26,7 +26,6 @@ public class ResultService {
 
     public ContestResultDTO getResultsByContestId(Long contestId) {
         ContestDetailsDTO contest = contestClient.getContestById(contestId);
-        System.out.println("ResultService: Fetched contest data: " + contest);
         List<CandidateDTO> candidates = contest.candidates();
         List<CandidateResult> candidateResults = new ArrayList<>();
         for (CandidateDTO candidate : candidates) {

@@ -11,6 +11,6 @@ public class Vote {
 	private String id;
 	private Long contestId;
 	private Long voterId;
-	private String candidateIds;
+	private Long candidateId;
 	private Long createdAt;
 }

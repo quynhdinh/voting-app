@@ -7,10 +7,13 @@ import com.example.vote.dto.VoteDTO;
 import com.example.vote.integration.VoteProducer;
 import java.util.*;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class VoteService {
 	private final VoteRepository voteRepository;
 	private final UserVoteStateRepository userVoteStateRepository;
@@ -18,7 +21,7 @@ public class VoteService {
 	public List<Vote> getAllVotes() {
 		return voteRepository.findAll();
 	}
-	public Vote vote(VoteDTO vote) throws Exception {
+	public Optional<Vote> vote(VoteDTO vote) throws Exception {
 		// there is only one vote in vote.candidateId
 		// check if user has already voted for this candidate in this contest
 		// if yes ignore else save
@@ -26,21 +29,20 @@ public class VoteService {
 		String already = userOpt.map(User_Vote_State::getCandidateIds).orElse("");
 		Set<String> alreadySet = new HashSet<>(Arrays.asList(already.split(",")));
 		if (!alreadySet.contains(String.valueOf(vote.getCandidateId()))) {
-
 			alreadySet.add(String.valueOf(vote.getCandidateId()));
 			String updated = String.join(",", alreadySet);
 			User_Vote_State userVoteState = new User_Vote_State(userOpt.isPresent() ? userOpt.get().getId() : null, vote.getVoterId(), vote.getContestId(), updated);
 			userVoteStateRepository.save(userVoteState);
 			// save vote
-			Vote newVote = new Vote(null, vote.getContestId(), vote.getVoterId(), vote.getCandidateId().toString(), System.currentTimeMillis());
+			Vote newVote = new Vote(null, vote.getContestId(), vote.getVoterId(), vote.getCandidateId(), System.currentTimeMillis());
 			Vote savedVote = voteRepository.save(newVote);
 			voteProducer.sendVote(vote);
-			return savedVote;
+			return Optional.of(savedVote);
 		}
-		return null; // already voted for this candidate
+		return Optional.empty(); // already voted for this candidate
 	}
-	public Vote unvote(VoteDTO vote) throws Exception {
-		return null;
+	public Optional<Vote> unvote(VoteDTO vote) throws Exception {
+		return Optional.empty();
 	}
 
 }

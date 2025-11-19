@@ -15,7 +15,6 @@ import java.util.List;
 public class ResultController {
     private final ResultService resultService;
 
-    // get test endpoint
     @GetMapping
     public String test() {
         return "Result Service is up and running!";
