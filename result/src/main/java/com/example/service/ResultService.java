@@ -1,6 +1,8 @@
 package com.example.service;
 import com.example.repository.ResultRepository;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +18,7 @@ import java.util.*;
 @Transactional
 @AllArgsConstructor
 @Service
+@Slf4j
 public class ResultService {
     private final ResultRepository resultRepository;
     private final ContestClient contestClient;
@@ -23,7 +26,7 @@ public class ResultService {
     public List<Result> getAllResults() {
         return resultRepository.findAll();
     }
-
+    @CircuitBreaker(name = "resultServiceCircuitBreaker", fallbackMethod = "getResultsByContestIdFallback")
     public ContestResultDTO getResultsByContestId(Long contestId) {
         ContestDetailsDTO contest = contestClient.getContestById(contestId);
         List<CandidateDTO> candidates = contest.candidates();
@@ -47,8 +50,16 @@ public class ResultService {
         );
     }
 
-    // increment the vote in redis
-    // increment the vote in postgres
+	private ContestResultDTO getResultsByContestIdFallback(Long contestId, Throwable t) {
+        log.error("Fallback executed for getResultsByContestId due to: {}", t.getMessage());
+        return new ContestResultDTO(
+                contestId,
+                "N/A",
+                "N/A",
+                Collections.emptyList()
+        );
+	}
+
     public void processVote(VoteDTO vote) {
         Long candidateId = vote.candidateId();
         Result result = resultRepository.findByContestIdAndCandidateId(vote.contestId(), candidateId)

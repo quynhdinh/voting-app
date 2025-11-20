@@ -26,12 +26,11 @@ class VoteController {
 		return voteService.getAllVotes();
 	}
 
-	// sample curl
 	// curl -X POST http://localhost:8080/votes -H "Content-Type: application/json" -d '{"contestId": 1, "voterId": 1, "candidateId": 2}'
 	@PostMapping
 	public ResponseEntity<VoteResponse> vote(@RequestBody VoteDTO vote) throws Exception {
 		log.info("Received vote request: {}", vote);
-		if(vote.getVoterId() <= 0){
+		if (vote.getVoterId() <= 0){
 			return ResponseEntity.badRequest().body(new VoteResponse("Invalid voter ID", null, null, null));
 		}
 		Optional<Vote> v = voteService.vote(vote);
